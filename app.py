@@ -1,4 +1,9 @@
+from __future__ import annotations
+
 import os
+import re
+
+from typing import List
 
 from flask import Flask, request, jsonify
 from werkzeug.exceptions import BadRequest
@@ -9,7 +14,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
 
-def do_cmd(cmd, value, data):
+def do_cmd(cmd: str, value: str, data: List[str]) -> List:
     if cmd == 'filter':
         result = list(filter(lambda record: value in record, data))
     elif cmd == 'map':
@@ -22,12 +27,15 @@ def do_cmd(cmd, value, data):
         result = sorted(data, reverse=reverse)
     elif cmd == 'limit':
         result = data[:int(value)]
+    elif cmd == 'regex':
+        regex = re.compile(value)
+        result = list(filter(lambda v: re.search(regex, v), data))
     else:
         raise BadRequest
     return result
 
 
-def do_query(params):
+def do_query(params: dict) -> List | set:
     with open(os.path.join(DATA_DIR, params["file_name"])) as f:
         file_data = f.readlines()
 
